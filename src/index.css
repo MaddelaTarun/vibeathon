@@ -1,15 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #0a0e14;
+  color: #1e293b;
+  background-color: #faf9f6;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,21 +24,30 @@ body {
   min-height: 100vh;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-::-webkit-scrollbar-track {
-  background: #151a21;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #faf9f6;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #1f2937;
-  border-radius: 4px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+@layer components {
+  .bistro-card {
+    @apply bg-white border border-bistro-border rounded-xl shadow-soft transition-all duration-300 hover:shadow-elevated p-6;
+  }
+  
+  .status-badge {
+    @apply px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider;
+  }
 }

@@ -5,78 +5,35 @@ interface ActionsLogProps {
 }
 
 export default function ActionsLog({ actions }: ActionsLogProps) {
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return 'border-status-critical bg-status-critical/10';
-      case 'warning':
-        return 'border-status-warning bg-status-warning/10';
-      case 'info':
-        return 'border-status-info bg-status-info/10';
-      default:
-        return 'border-command-border bg-command-bg';
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'labor_reallocation':
-        return 'STAFF MOVED';
-      case 'task_downgrade':
-        return 'PRIORITY CHANGE';
-      case 'margin_flag':
-        return 'MONEY WARNING';
-      case 'auto_86':
-        return 'AUTO-CANCELLED';
-      default:
-        return type.toUpperCase().replace('_', ' ');
-    }
-  };
-
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' });
-  };
+  const latestActions = actions.slice(0, 10);
 
   return (
-    <div className="bg-command-panel border border-command-border rounded-lg p-6">
-      <h2 className="text-lg font-bold font-mono mb-4 flex items-center text-command-text">
-        <span className="w-2 h-2 bg-status-critical rounded-full mr-2 animate-pulse"></span>
-        AI DECISIONS
-      </h2>
-
-      <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-        {actions.map((action) => (
-          <div
-            key={action.id}
-            className={`border-l-4 ${getSeverityColor(
-              action.severity
-            )} rounded p-3 transition-all hover:bg-command-panel/50`}
-          >
-            <div className="flex items-start justify-between mb-1">
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-mono font-bold text-command-muted uppercase tracking-wider">
-                  {getTypeLabel(action.type)}
-                </span>
-              </div>
-              <span className="text-[10px] font-mono text-command-muted">
-                {formatTimestamp(action.timestamp)}
-              </span>
-            </div>
-
-            <div className="text-sm font-mono mb-1 text-command-text leading-tight">{action.description}</div>
-
-            <div className="flex items-center justify-between text-[10px] font-mono text-command-muted uppercase">
-              <span>Impact: {action.impact}</span>
-              {action.station && <span>Station: {action.station}</span>}
-            </div>
+    <div className="space-y-8">
+      {latestActions.map((action) => (
+        <div key={action.id} className="flex flex-col border-b border-bistro-border last:border-0 pb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-bistro-muted uppercase tracking-widest italic">
+              AI Decision Engine • {new Date(action.timestamp).toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' })}
+            </span>
+            <div className={`w-1.5 h-1.5 rounded-full ${action.severity === 'critical' ? 'bg-status-critical' : 'bg-status-info'}`}></div>
           </div>
-        ))}
-      </div>
-
-      {actions.length === 0 && (
-        <div className="text-center text-command-muted font-mono text-sm py-8">
-          NO ACTIONS LOGGED
+          
+          <span className="text-xl font-serif font-bold text-bistro-text leading-tight mb-2 italic">
+            {action.description}
+          </span>
+          
+          <div className="flex items-center space-x-4 text-[10px] font-bold text-bistro-muted uppercase tracking-widest">
+            <span>IMPACT: {action.impact}</span>
+            {action.station && (
+              <span className="border-l border-bistro-border pl-4">STATION: {action.station}</span>
+            )}
+          </div>
+        </div>
+      ))}
+      
+      {latestActions.length === 0 && (
+        <div className="py-8 text-center text-bistro-muted font-serif italic text-lg">
+          The AI is monitoring service. Everything is quiet.
         </div>
       )}
     </div>

@@ -6,97 +6,28 @@ interface MarginTrackerProps {
 
 export default function MarginTracker({ tickets }: MarginTrackerProps) {
   const atRiskTickets = tickets
-    .filter((t) => t.status !== 'completed' && t.status !== 'cancelled')
+    .filter((t) => t.status !== 'completed' && t.status !== 'cancelled' && t.delay_minutes > 5)
     .sort((a, b) => b.margin_value - a.margin_value)
-    .slice(0, 10);
-
-  const totalAtRisk = atRiskTickets.reduce((sum, t) => sum + t.margin_value, 0);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'delayed':
-        return 'text-status-critical';
-      case 'in_progress':
-        return 'text-status-warning';
-      case 'pending':
-        return 'text-status-info';
-      default:
-        return 'text-command-muted';
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'delayed':
-        return 'bg-status-critical/20 text-status-critical';
-      case 'in_progress':
-        return 'bg-status-warning/20 text-status-warning';
-      case 'pending':
-        return 'bg-status-info/20 text-status-info';
-      default:
-        return 'bg-command-border text-command-muted';
-    }
-  };
+    .slice(0, 5);
 
   return (
-    <div className="bg-command-panel border border-command-border rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold font-mono flex items-center text-command-text">
-          <span className="w-2 h-2 bg-status-warning rounded-full mr-2"></span>
-          ORDERS AT RISK
-        </h2>
-        <div className="text-right">
-          <div className="text-[10px] font-mono text-command-muted uppercase">POTENTIAL LOSS</div>
-          <div
-            className={`text-xl font-bold font-mono ${
-              totalAtRisk > 200
-                ? 'text-status-critical'
-                : totalAtRisk > 100
-                ? 'text-status-warning'
-                : 'text-status-optimal'
-            }`}
-          >
-            ${totalAtRisk.toFixed(0)}
+    <div className="space-y-4">
+      {atRiskTickets.map((ticket) => (
+        <div key={ticket.id} className="flex items-center justify-between py-4 border-b border-bistro-border last:border-0 group">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-status-critical uppercase tracking-widest mb-1 italic">DELAY ALERT</span>
+            <span className="text-lg font-serif font-bold text-bistro-text tracking-tight italic">Order #{ticket.order_number} is holding up the kitchen.</span>
+            <span className="text-[10px] font-bold text-bistro-muted uppercase tracking-widest mt-1">Waiting for {ticket.delay_minutes} minutes • {ticket.items.length} dishes</span>
+          </div>
+          <div className="text-right">
+            <span className="text-xl font-serif font-bold text-status-critical italic">-${ticket.margin_value.toFixed(0)}</span>
           </div>
         </div>
-      </div>
-
-      <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-        {atRiskTickets.map((ticket) => (
-          <div
-            key={ticket.id}
-            className="bg-command-bg border border-command-border rounded p-3 hover:border-status-info transition-colors"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <span className="font-mono font-bold text-sm">Order #{ticket.order_number}</span>
-                <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-bold ${getStatusBadge(
-                    ticket.status
-                  )}`}
-                >
-                  {ticket.status === 'in_progress' ? 'COOKING' : ticket.status === 'pending' ? 'WAITING' : ticket.status}
-                </span>
-              </div>
-              <span className="font-mono font-bold text-status-warning">
-                ${ticket.margin_value.toFixed(0)}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-[10px] font-mono text-command-muted uppercase">
-              <span>{ticket.items.length} items</span>
-              <span>Difficult: {ticket.complexity}/10</span>
-              {ticket.delay_minutes > 0 && (
-                <span className="text-status-critical font-bold">+{ticket.delay_minutes}m DELAY</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
+      ))}
+      
       {atRiskTickets.length === 0 && (
-        <div className="text-center text-command-muted font-mono text-sm py-8">
-          NO TICKETS AT RISK
+        <div className="py-8 text-center text-bistro-muted font-serif italic text-lg">
+          No delays detected. Service is flowing perfectly.
         </div>
       )}
     </div>
