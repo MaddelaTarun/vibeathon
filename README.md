@@ -1,5 +1,3 @@
-this heloo 
-
 # Kitchen-Pulse: The Autonomous Expeditor
 
 > Agentic Infrastructure for Commercial Kitchen Operations
