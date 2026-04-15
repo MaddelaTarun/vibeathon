@@ -3,33 +3,59 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { ExpeditorEngine } from './expeditor.js';
 import { TelemetrySimulator } from './telemetry.js';
+import ChefManager from './chefs.js';
+import MenuManager from './menu.js';
+import OrderManager from './orders.js';
+import ReviewManager from './reviews.js';
+import SessionManager from './sessions.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const app = express();
+app.use(express.json());
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
 const PORT = 3001;
 
-// Initialize the decision engine
+// Initialize the decision engine and managers
 const expeditor = new ExpeditorEngine();
 const telemetry = new TelemetrySimulator();
+const chefManager = new ChefManager();
+const menuManager = new MenuManager();
+const sessionManager = new SessionManager();
+const orderManager = new OrderManager(expeditor, chefManager);
+const reviewManager = new ReviewManager(chefManager);
 
-// Store connected clients
-const clients = new Set();
+// Store connected clients with metadata
+const clients = new Map(); // WebSocket -> { role, tableCode, sessionId }
 let currentAiBriefing = "Initializing AI Intelligence...";
 
 // WebSocket connection handler
 wss.on('connection', (ws) => {
   console.log('Client connected');
-  clients.add(ws);
+  clients.set(ws, { role: 'guest' });
 
   // Send initial state
   ws.send(JSON.stringify({ type: 'stations', payload: expeditor.getStations() }));
-  ws.send(JSON.stringify({ type: 'tickets', payload: expeditor.getTickets() }));
   ws.send(JSON.stringify({ type: 'metrics', payload: expeditor.getMetrics() }));
+
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message);
+      if (data.type === 'register') {
+        clients.set(ws, { 
+          role: data.role, 
+          tableCode: data.tableCode, 
+          sessionId: data.sessionId 
+        });
+        console.log(`Registered client: ${data.role} for table ${data.tableCode}`);
+      }
+    } catch (e) {
+      console.error('Error parsing WS message:', e);
+    }
+  });
 
   ws.on('close', () => {
     console.log('Client disconnected');
@@ -37,11 +63,15 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Broadcast to all connected clients
-function broadcast(type, payload) {
+// Broadcast to connected clients
+function broadcast(type, payload, targetTableCode = null) {
   const message = JSON.stringify({ type, payload });
-  clients.forEach((client) => {
-    if (client.readyState === 1) client.send(message);
+  clients.forEach((meta, client) => {
+    if (client.readyState === 1) { // OPEN
+      if (!targetTableCode || meta.tableCode === targetTableCode) {
+        client.send(message);
+      }
+    }
   });
 }
 
@@ -87,7 +117,6 @@ async function updateAiBriefing() {
     const data = await response.json();
     if (data.choices && data.choices[0]) {
       currentAiBriefing = data.choices[0].message.content;
-      console.log('AI Briefing updated:', currentAiBriefing);
     }
   } catch (error) {
     console.error('Error calling Groq API:', error);
@@ -106,8 +135,8 @@ setInterval(() => {
   });
 
   expeditor.updateTickets();
+  orderManager.syncWithExpeditor();
   
-  // Attach current AI briefing to telemetry
   currentTelemetry.ai_briefing = currentAiBriefing;
 
   broadcast('stations', expeditor.getStations());
@@ -116,22 +145,83 @@ setInterval(() => {
   broadcast('telemetry', currentTelemetry);
 }, 1000);
 
-// AI Briefing loop (every 20 seconds)
 updateAiBriefing();
-setInterval(updateAiBriefing, 20000);
+setInterval(updateAiBriefing, 30000);
 
-// Random orders
-setInterval(() => {
-  expeditor.addRandomTicket();
-}, 5000);
+// Random tickets logic (disabled if real orders are active)
+let autoTicketsEnabled = true;
+let ticketInterval = 8000;
 
-app.get('/api/stress-test', (req, res) => {
-  const count = parseInt(req.query.count) || 50;
-  for (let i = 0; i < count; i++) expeditor.addRandomTicket();
-  res.json({ message: `Added ${count} tickets`, success: true });
+function addTicketWithInterval() {
+  if (autoTicketsEnabled) expeditor.addRandomTicket();
+}
+
+setInterval(addTicketWithInterval, ticketInterval);
+
+// Stress test endpoint - temporarily speeds up ticket generation
+app.post('/api/stress-test/start', (req, res) => {
+  const { ticketsPerMinute = 50 } = req.body;
+  ticketInterval = Math.floor(60000 / ticketsPerMinute);
+  autoTicketsEnabled = true;
+  console.log(`🔥 Stress test activated: ${ticketsPerMinute} tickets/min`);
+  res.json({ success: true, interval: ticketInterval });
+});
+
+app.post('/api/stress-test/stop', (req, res) => {
+  ticketInterval = 8000;
+  console.log('✅ Stress test deactivated');
+  res.json({ success: true });
+});
+
+// --- REST API ROUTES ---
+
+app.post('/api/session', (req, res) => {
+  const { name, role, tableNumber } = req.body;
+  const session = sessionManager.createSession(name, role, tableNumber);
+  res.json(session);
+});
+
+app.get('/api/menu', (req, res) => {
+  res.json({
+    items: menuManager.getMenuGrouped(),
+    cuisineLabels: chefManager.getCuisineLabels()
+  });
+});
+
+app.get('/api/chefs', (req, res) => {
+  res.json({
+    chefs: chefManager.getChefsGrouped(),
+    cuisineLabels: chefManager.getCuisineLabels()
+  });
+});
+
+app.post('/api/orders', (req, res) => {
+  const { tableCode, items, chefId } = req.body;
+  const order = orderManager.createOrder(tableCode, items, chefId);
+  autoTicketsEnabled = false; // Stop random noise when real orders start
+  broadcast('order_update', order, tableCode);
+  res.json(order);
+});
+
+app.get('/api/orders/table/:code', (req, res) => {
+  res.json(orderManager.getOrdersByTableCode(req.params.code));
+});
+
+app.post('/api/reviews', (req, res) => {
+  const { orderId, chefId, ratings, comment } = req.body;
+  const review = reviewManager.createReview(orderId, chefId, ratings, comment);
+  if (review) {
+    res.json({ success: true, review });
+  } else {
+    res.status(400).json({ error: 'Review already exists for this order' });
+  }
+});
+
+app.post('/api/orders/:id/serve', (req, res) => {
+  const success = orderManager.serveOrder(req.params.id);
+  res.json({ success });
 });
 
 server.listen(PORT, () => {
   console.log(`🚀 Kitchen-Pulse running on http://localhost:${PORT}`);
-  console.log(`🧠 AI Head Chef Engine: ${process.env.GROQ_API_KEY ? 'ACTIVE' : 'AWAITING KEY'}`);
 });

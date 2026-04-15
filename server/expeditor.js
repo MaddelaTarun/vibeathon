@@ -303,6 +303,30 @@ export class ExpeditorEngine {
   }
 
   /**
+   * Add a real order from the UI
+   */
+  addRealOrder(items, orderId) {
+    const margin_value = items.reduce((sum, item) => sum + (item.sale_price - item.ingredient_cost), 0);
+    const complexity = Math.min(10, Math.ceil(items.length * 1.5 + items.reduce((sum, item) => sum + item.prep_time_minutes, 0) / 12));
+
+    const ticket = {
+      id: `ticket-${orderId}-${Date.now()}`,
+      order_number: orderId,
+      items,
+      margin_value,
+      complexity,
+      status: 'pending',
+      delay_minutes: 0,
+      created_at: Date.now(),
+    };
+
+    this.tickets.push(ticket);
+    this.metrics.total_tickets++;
+
+    return ticket;
+  }
+
+  /**
    * Add a random ticket (Professional Menu)
    */
   addRandomTicket() {
