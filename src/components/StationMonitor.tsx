@@ -18,9 +18,9 @@ export default function StationMonitor({ stations }: StationMonitorProps) {
 
   return (
     <div className="bg-command-panel border border-command-border rounded-lg p-6">
-      <h2 className="text-lg font-bold font-mono mb-4 flex items-center">
+      <h2 className="text-lg font-bold font-mono mb-4 flex items-center text-command-text">
         <span className="w-2 h-2 bg-status-info rounded-full mr-2"></span>
-        STATION STRESS MONITOR
+        STATION BUSYNESS
       </h2>
 
       <div className="space-y-4">
@@ -30,7 +30,7 @@ export default function StationMonitor({ stations }: StationMonitorProps) {
               <div className="flex items-center space-x-3">
                 <span className="font-mono font-semibold text-sm">{station.name}</span>
                 <span className="text-xs font-mono text-command-muted">
-                  {station.assigned_staff.length} staff
+                  {station.assigned_staff.length} on it
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -43,16 +43,13 @@ export default function StationMonitor({ stations }: StationMonitorProps) {
                       : 'text-status-optimal'
                   }`}
                 >
-                  {station.stress_level}%
-                </span>
-                <span className="text-xs font-mono text-command-muted">
-                  {station.current_load}/{station.capacity}
+                  {station.stress_level.toFixed(0)}%
                 </span>
               </div>
             </div>
 
             {/* Stress Bar */}
-            <div className="relative h-3 bg-command-bg rounded-full overflow-hidden">
+            <div className="relative h-3 bg-command-bg rounded-full overflow-hidden border border-command-border">
               <div
                 className={`absolute left-0 top-0 h-full transition-all duration-500 ${getStressColor(
                   station.stress_level
@@ -61,15 +58,19 @@ export default function StationMonitor({ stations }: StationMonitorProps) {
               ></div>
             </div>
 
-            {/* Capacity Indicator */}
-            <div className="flex items-center justify-between text-xs font-mono text-command-muted">
-              <span>CAPACITY</span>
-              <span>
+            {/* Status Indicator */}
+            <div className="flex items-center justify-between text-[10px] font-mono text-command-muted uppercase">
+              <span>WORKLOAD</span>
+              <span className={
+                station.stress_level > 85 ? 'text-status-critical font-bold' : 
+                station.stress_level > 70 ? 'text-status-warning' : 
+                'text-status-optimal'
+              }>
                 {station.stress_level > 85
-                  ? 'CRITICAL'
+                  ? 'DROWNING'
                   : station.stress_level > 70
-                  ? 'HIGH'
-                  : 'NORMAL'}
+                  ? 'BUSY'
+                  : 'GOOD'}
               </span>
             </div>
           </div>

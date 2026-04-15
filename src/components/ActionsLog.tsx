@@ -5,19 +5,6 @@ interface ActionsLogProps {
 }
 
 export default function ActionsLog({ actions }: ActionsLogProps) {
-  const getSeverityIcon = (severity: string) => {
-    switch (severity) {
-      case 'critical':
-        return '🔴';
-      case 'warning':
-        return '🟡';
-      case 'info':
-        return '🔵';
-      default:
-        return '⚪';
-    }
-  };
-
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
@@ -34,55 +21,54 @@ export default function ActionsLog({ actions }: ActionsLogProps) {
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'labor_reallocation':
-        return 'LABOR REALLOC';
+        return 'STAFF MOVED';
       case 'task_downgrade':
-        return 'TASK DOWNGRADE';
+        return 'PRIORITY CHANGE';
       case 'margin_flag':
-        return 'MARGIN FLAG';
+        return 'MONEY WARNING';
       case 'auto_86':
-        return 'AUTO-86';
+        return 'AUTO-CANCELLED';
       default:
-        return type.toUpperCase();
+        return type.toUpperCase().replace('_', ' ');
     }
   };
 
   const formatTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { hour12: false });
+    return date.toLocaleTimeString('en-US', { hour12: false, minute: '2-digit', second: '2-digit' });
   };
 
   return (
     <div className="bg-command-panel border border-command-border rounded-lg p-6">
-      <h2 className="text-lg font-bold font-mono mb-4 flex items-center">
+      <h2 className="text-lg font-bold font-mono mb-4 flex items-center text-command-text">
         <span className="w-2 h-2 bg-status-critical rounded-full mr-2 animate-pulse"></span>
-        AUTONOMOUS ACTIONS LOG
+        AI DECISIONS
       </h2>
 
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
         {actions.map((action) => (
           <div
             key={action.id}
             className={`border-l-4 ${getSeverityColor(
               action.severity
-            )} rounded p-3 transition-all hover:scale-[1.01]`}
+            )} rounded p-3 transition-all hover:bg-command-panel/50`}
           >
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-1">
               <div className="flex items-center space-x-2">
-                <span className="text-lg">{getSeverityIcon(action.severity)}</span>
-                <span className="text-xs font-mono font-bold text-command-muted">
+                <span className="text-[10px] font-mono font-bold text-command-muted uppercase tracking-wider">
                   {getTypeLabel(action.type)}
                 </span>
               </div>
-              <span className="text-xs font-mono text-command-muted">
+              <span className="text-[10px] font-mono text-command-muted">
                 {formatTimestamp(action.timestamp)}
               </span>
             </div>
 
-            <div className="text-sm font-mono mb-2">{action.description}</div>
+            <div className="text-sm font-mono mb-1 text-command-text leading-tight">{action.description}</div>
 
-            <div className="flex items-center justify-between text-xs font-mono text-command-muted">
-              <span>IMPACT: {action.impact}</span>
-              {action.station && <span>STATION: {action.station}</span>}
+            <div className="flex items-center justify-between text-[10px] font-mono text-command-muted uppercase">
+              <span>Impact: {action.impact}</span>
+              {action.station && <span>Station: {action.station}</span>}
             </div>
           </div>
         ))}

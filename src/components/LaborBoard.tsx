@@ -10,12 +10,12 @@ export default function LaborBoard({ stations }: LaborBoardProps) {
   return (
     <div className="bg-command-panel border border-command-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold font-mono flex items-center">
+        <h2 className="text-lg font-bold font-mono flex items-center text-command-text">
           <span className="w-2 h-2 bg-status-optimal rounded-full mr-2"></span>
-          LABOR BOARD
+          TEAM ASSIGNMENTS
         </h2>
-        <div className="text-xs font-mono text-command-muted">
-          {totalStaff} STAFF
+        <div className="text-xs font-mono text-command-muted uppercase">
+          {totalStaff} PEOPLE TOTAL
         </div>
       </div>
 
@@ -24,8 +24,8 @@ export default function LaborBoard({ stations }: LaborBoardProps) {
           <div key={station.id} className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-mono font-semibold text-sm">{station.name}</span>
-              <span className="text-xs font-mono text-command-muted">
-                {station.assigned_staff.length} assigned
+              <span className="text-[10px] font-mono text-command-muted uppercase">
+                {station.assigned_staff.length} WORKING HERE
               </span>
             </div>
 
@@ -35,16 +35,21 @@ export default function LaborBoard({ stations }: LaborBoardProps) {
                   key={index}
                   className="bg-command-bg border border-command-border rounded px-3 py-2 text-xs font-mono flex items-center justify-between"
                 >
-                  <span>{staff}</span>
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      station.stress_level > 85
-                        ? 'bg-status-critical animate-pulse'
-                        : station.stress_level > 70
-                        ? 'bg-status-warning'
-                        : 'bg-status-optimal'
-                    }`}
-                  ></span>
+                  <span className="text-command-text">{staff}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[8px] text-command-muted uppercase">
+                      {station.stress_level > 85 ? 'STRESSED' : station.stress_level > 70 ? 'BUSY' : 'OK'}
+                    </span>
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        station.stress_level > 85
+                          ? 'bg-status-critical animate-pulse'
+                          : station.stress_level > 70
+                          ? 'bg-status-warning'
+                          : 'bg-status-optimal'
+                      }`}
+                    ></span>
+                  </div>
                 </div>
               ))}
 

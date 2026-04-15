@@ -41,12 +41,12 @@ export default function MarginTracker({ tickets }: MarginTrackerProps) {
   return (
     <div className="bg-command-panel border border-command-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold font-mono flex items-center">
+        <h2 className="text-lg font-bold font-mono flex items-center text-command-text">
           <span className="w-2 h-2 bg-status-warning rounded-full mr-2"></span>
-          MARGIN-AT-RISK TRACKER
+          ORDERS AT RISK
         </h2>
         <div className="text-right">
-          <div className="text-xs font-mono text-command-muted">TOTAL AT RISK</div>
+          <div className="text-[10px] font-mono text-command-muted uppercase">POTENTIAL LOSS</div>
           <div
             className={`text-xl font-bold font-mono ${
               totalAtRisk > 200
@@ -56,12 +56,12 @@ export default function MarginTracker({ tickets }: MarginTrackerProps) {
                 : 'text-status-optimal'
             }`}
           >
-            ${totalAtRisk.toFixed(2)}
+            ${totalAtRisk.toFixed(0)}
           </div>
         </div>
       </div>
 
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      <div className="space-y-2 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
         {atRiskTickets.map((ticket) => (
           <div
             key={ticket.id}
@@ -69,25 +69,25 @@ export default function MarginTracker({ tickets }: MarginTrackerProps) {
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <span className="font-mono font-bold text-sm">#{ticket.order_number}</span>
+                <span className="font-mono font-bold text-sm">Order #{ticket.order_number}</span>
                 <span
-                  className={`text-xs font-mono px-2 py-0.5 rounded ${getStatusBadge(
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-bold ${getStatusBadge(
                     ticket.status
                   )}`}
                 >
-                  {ticket.status.toUpperCase()}
+                  {ticket.status === 'in_progress' ? 'COOKING' : ticket.status === 'pending' ? 'WAITING' : ticket.status}
                 </span>
               </div>
               <span className="font-mono font-bold text-status-warning">
-                ${ticket.margin_value.toFixed(2)}
+                ${ticket.margin_value.toFixed(0)}
               </span>
             </div>
 
-            <div className="flex items-center justify-between text-xs font-mono text-command-muted">
+            <div className="flex items-center justify-between text-[10px] font-mono text-command-muted uppercase">
               <span>{ticket.items.length} items</span>
-              <span>Complexity: {ticket.complexity}/10</span>
+              <span>Difficult: {ticket.complexity}/10</span>
               {ticket.delay_minutes > 0 && (
-                <span className="text-status-critical">+{ticket.delay_minutes}min</span>
+                <span className="text-status-critical font-bold">+{ticket.delay_minutes}m DELAY</span>
               )}
             </div>
           </div>

@@ -9,13 +9,13 @@ export default function Header({ connected }: HeaderProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-status-critical rounded-full animate-pulse"></div>
-              <h1 className="text-2xl font-bold font-mono tracking-tight">
-                KITCHEN-PULSE
+              <div className="w-3 h-3 bg-status-optimal rounded-full animate-pulse"></div>
+              <h1 className="text-2xl font-bold font-sans tracking-tight text-command-text">
+                Smart Kitchen Assistant
               </h1>
             </div>
-            <span className="text-command-muted text-sm font-mono">
-              AUTONOMOUS EXPEDITOR v1.0
+            <span className="text-command-muted text-sm font-sans italic">
+              Your AI Team is Managing the Rush
             </span>
           </div>
 

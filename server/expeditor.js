@@ -210,12 +210,17 @@ export class ExpeditorEngine {
         }
       } else if (ticket.status === 'in_progress') {
         // Update delay
-        const elapsed = (Date.now() - ticket.started_at) / 60000; // minutes
-        ticket.delay_minutes = Math.floor(elapsed);
+        const elapsedMinutes = (Date.now() - ticket.started_at) / 60000; // actual minutes
+        ticket.delay_minutes = Math.floor(elapsedMinutes);
 
-        // Complete ticket randomly (simulate completion)
-        if (Math.random() < 0.05) {
-          // 5% chance per tick
+        // Calculate total prep time in seconds for the simulation
+        // Scale: 1 minute of real prep = 3 seconds of simulation time
+        const totalPrepMinutes = ticket.items.reduce((sum, item) => sum + item.prep_time_minutes, 0);
+        const requiredSimulationSeconds = totalPrepMinutes * 3;
+        const elapsedSimulationSeconds = (Date.now() - ticket.started_at) / 1000;
+
+        // Complete ticket if enough simulation time has passed
+        if (elapsedSimulationSeconds >= requiredSimulationSeconds) {
           ticket.status = 'completed';
           ticket.completed_at = Date.now();
           this.metrics.completed_tickets++;

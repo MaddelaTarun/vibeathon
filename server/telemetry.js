@@ -18,8 +18,8 @@ export class TelemetrySimulator {
     // Calculate station stress
     const station_stress = {};
     stations.forEach((station) => {
-      // Add random fluctuation
-      const fluctuation = (Math.random() - 0.5) * 10;
+      // Add subtle random fluctuation
+      const fluctuation = (Math.random() - 0.5) * 3;
       station.stress_level = Math.max(
         0,
         Math.min(100, station.stress_level + fluctuation)

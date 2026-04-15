@@ -8,15 +8,15 @@ interface MetricsDashboardProps {
 export default function MetricsDashboard({ metrics, telemetry }: MetricsDashboardProps) {
   const metricCards = [
     {
-      label: 'THROUGHPUT',
-      value: telemetry?.throughput_per_hour.toFixed(1) || '0',
-      unit: 'tickets/hr',
+      label: 'COOKING SPEED',
+      value: telemetry?.throughput_per_hour.toFixed(0) || '0',
+      unit: 'orders/hr',
       status: (telemetry?.throughput_per_hour || 0) > 30 ? 'optimal' : 'warning',
     },
     {
-      label: 'LABOR UTIL',
+      label: 'TEAM BUSYNESS',
       value: telemetry?.labor_utilization.toFixed(0) || '0',
-      unit: '%',
+      unit: '% busy',
       status:
         (telemetry?.labor_utilization || 0) > 85
           ? 'critical'
@@ -25,25 +25,25 @@ export default function MetricsDashboard({ metrics, telemetry }: MetricsDashboar
           : 'warning',
     },
     {
-      label: 'MARGIN LEAKAGE',
+      label: 'MONEY AT RISK',
       value: `$${metrics.total_profit_at_risk.toFixed(0)}`,
       unit: '',
       status: metrics.total_profit_at_risk > 200 ? 'critical' : metrics.total_profit_at_risk > 100 ? 'warning' : 'optimal',
     },
     {
-      label: 'AVG DELAY',
+      label: 'WAIT TIME',
       value: metrics.average_delay.toFixed(1),
       unit: 'min',
       status: metrics.average_delay > 10 ? 'critical' : metrics.average_delay > 5 ? 'warning' : 'optimal',
     },
     {
-      label: 'AUTONOMOUS ACTIONS',
+      label: 'AI DECISIONS',
       value: metrics.autonomous_actions.toString(),
-      unit: 'decisions',
+      unit: 'actions',
       status: 'info',
     },
     {
-      label: 'COMPLETION RATE',
+      label: 'SUCCESS RATE',
       value: metrics.total_tickets > 0 ? ((metrics.completed_tickets / metrics.total_tickets) * 100).toFixed(0) : '0',
       unit: '%',
       status: 'info',
