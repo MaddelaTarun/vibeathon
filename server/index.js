@@ -207,6 +207,10 @@ app.get('/api/orders/table/:code', (req, res) => {
   res.json(orderManager.getOrdersByTableCode(req.params.code));
 });
 
+app.get('/api/orders/all', (req, res) => {
+  res.json(orderManager.getAllOrders());
+});
+
 app.post('/api/reviews', (req, res) => {
   const { orderId, chefId, ratings, comment } = req.body;
   const review = reviewManager.createReview(orderId, chefId, ratings, comment);

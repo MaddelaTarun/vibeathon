@@ -32,6 +32,8 @@ const WaiterView: React.FC = () => {
   const [tableCode, setTableCode] = useState('');
   const [ordering, setOrdering] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [showAllOrders, setShowAllOrders] = useState(false);
 
   useEffect(() => {
     fetch('/api/menu').then(res => res.json()).then(data => {
@@ -40,6 +42,36 @@ const WaiterView: React.FC = () => {
       setActiveCuisine(Object.keys(data.items)[0]);
     });
     fetch('/api/chefs').then(res => res.json()).then(data => setChefs(data.chefs));
+    
+    // Fetch all orders for waiter view
+    fetch('/api/orders/all').then(res => res.json()).then(setAllOrders).catch(() => setAllOrders([]));
+    
+    // WebSocket for real-time order updates
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const wsUrl = isDev ? 'ws://localhost:3001' : `${protocol}//${window.location.host}`;
+    
+    const ws = new WebSocket(wsUrl);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'register', role: 'waiter' }));
+    };
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'order_update') {
+        setAllOrders(prev => {
+          const index = prev.findIndex(o => o.id === data.payload.id);
+          if (index >= 0) {
+            const next = [...prev];
+            next[index] = data.payload;
+            return next;
+          }
+          return [data.payload, ...prev];
+        });
+      }
+    };
+    
+    return () => ws.close();
   }, []);
 
   const addToCart = (item: MenuItem) => {
@@ -70,9 +102,28 @@ const WaiterView: React.FC = () => {
       setOrderSuccess(true);
       setCart([]);
       setTableCode('');
+      // Refresh all orders
+      fetch('/api/orders/all').then(res => res.json()).then(setAllOrders);
       setTimeout(() => setOrderSuccess(false), 3000);
     }
     setOrdering(false);
+  };
+
+  const serveOrder = async (orderId: string) => {
+    const res = await fetch(`/api/orders/${orderId}/serve`, { method: 'POST' });
+    if (res.ok) {
+      fetch('/api/orders/all').then(res => res.json()).then(setAllOrders);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'placed': return 'text-status-info';
+      case 'preparing': return 'text-status-warning';
+      case 'ready': return 'text-status-optimal';
+      case 'served': return 'text-grilli-muted';
+      default: return 'text-grilli-text';
+    }
   };
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -81,7 +132,94 @@ const WaiterView: React.FC = () => {
     <div className="min-h-screen bg-grilli-black text-grilli-text font-sans pb-24">
       <Header connected={true} />
 
-      <main className="max-w-7xl mx-auto px-8 pt-32 grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 space-y-8 sm:space-y-12">
+        {/* Header with View Toggle */}
+        <section className="text-center space-y-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold italic">Waitstaff <span className="text-grilli-gold">Terminal</span></h2>
+          <div className="flex justify-center gap-4">
+            <button 
+              onClick={() => setShowAllOrders(false)}
+              className={`px-6 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                !showAllOrders 
+                  ? 'bg-grilli-gold text-grilli-black border-grilli-gold' 
+                  : 'border-grilli-border text-grilli-muted hover:border-grilli-gold/30'
+              }`}
+            >
+              New Order
+            </button>
+            <button 
+              onClick={() => setShowAllOrders(true)}
+              className={`px-6 py-2 rounded-full border text-[10px] font-bold uppercase tracking-widest transition-all ${
+                showAllOrders 
+                  ? 'bg-grilli-gold text-grilli-black border-grilli-gold' 
+                  : 'border-grilli-border text-grilli-muted hover:border-grilli-gold/30'
+              }`}
+            >
+              All Orders ({allOrders.length})
+            </button>
+          </div>
+        </section>
+
+        {/* All Orders View */}
+        {showAllOrders ? (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-serif font-bold italic text-grilli-gold">Active Orders</h3>
+              <p className="text-[10px] text-grilli-muted uppercase tracking-widest">Real-time order monitoring</p>
+            </div>
+            
+            {allOrders.length === 0 ? (
+              <div className="py-24 text-center border border-grilli-border/30 rounded-2xl bg-grilli-surface/20">
+                <p className="text-grilli-muted italic text-sm">No orders yet. Start taking orders!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allOrders.map(order => (
+                  <div key={order.id} className="bg-grilli-surface border border-grilli-border/50 rounded-xl p-6 space-y-4 hover:border-grilli-gold/30 transition-all">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[9px] font-bold text-grilli-gold uppercase tracking-widest opacity-60">Table</span>
+                        <h4 className="text-2xl font-serif font-bold italic">{order.tableCode}</h4>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-xs font-bold uppercase tracking-widest ${getStatusColor(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-bold text-grilli-muted uppercase tracking-widest">Order #{order.id}</span>
+                      {order.items.slice(0, 3).map((item: any, idx: number) => (
+                        <div key={idx} className="text-sm text-grilli-text">• {item.name}</div>
+                      ))}
+                      {order.items.length > 3 && (
+                        <div className="text-xs text-grilli-muted italic">+{order.items.length - 3} more items</div>
+                      )}
+                    </div>
+                    
+                    {order.status === 'ready' && (
+                      <button 
+                        onClick={() => serveOrder(order.id)}
+                        className="w-full py-2 bg-status-optimal/20 border border-status-optimal/50 text-status-optimal rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-status-optimal/30 transition-all"
+                      >
+                        Mark as Served
+                      </button>
+                    )}
+                    
+                    {order.status === 'served' && (
+                      <div className="text-center py-2 text-[9px] font-bold text-grilli-muted uppercase tracking-widest">
+                        ✓ Served
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* New Order View - Original Menu */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
         {/* Menu Section */}
         <div className="lg:col-span-8 space-y-12">
           <section className="space-y-6">
@@ -223,6 +361,8 @@ const WaiterView: React.FC = () => {
             <button onClick={logout} className="w-full text-[10px] font-bold text-grilli-muted uppercase tracking-[0.5em] hover:text-status-critical transition-colors text-center">Exit Terminal</button>
           </div>
         </div>
+          </div>
+        )}
       </main>
     </div>
   );

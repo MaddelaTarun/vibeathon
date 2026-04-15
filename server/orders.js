@@ -55,6 +55,10 @@ export default class OrderManager {
     return this.orders.filter(o => o.tableCode === tableCode);
   }
 
+  getAllOrders() {
+    return this.orders.sort((a, b) => b.timestamp - a.timestamp);
+  }
+
   syncWithExpeditor() {
     const expTickets = this.expeditor.getTickets();
     
@@ -78,6 +82,9 @@ export default class OrderManager {
         }
       }
     });
+    
+    // Broadcast order updates to all connected clients
+    return this.orders;
   }
 
   serveOrder(orderId) {
