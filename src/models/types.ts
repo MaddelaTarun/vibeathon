@@ -1,8 +1,14 @@
 /**
  * Core data models for Kitchen-Pulse
+ * Upgraded to: Professional Kitchen Data Models
  */
 
-export type StationType = 'Grill' | 'Sauté' | 'Prep' | 'Dish';
+export type StationType = 'Grill' | 'Sauté' | 'Pantry' | 'Pastry' | 'Fryer' | 'Pass' | 'Dish';
+
+export interface Staff {
+  name: string;
+  skills: string[];
+}
 
 export interface Station {
   id: string;
@@ -10,7 +16,7 @@ export interface Station {
   stress_level: number; // 0-100
   capacity: number;
   current_load: number;
-  assigned_staff: string[];
+  assigned_staff: Staff[];
 }
 
 export interface OrderItem {
@@ -61,15 +67,6 @@ export interface LaborReallocation {
   from_station: StationType;
   to_station: StationType;
   duration_minutes: number;
-  reason: string;
-}
-
-export interface MarginAlert {
-  id: string;
-  timestamp: number;
-  ticket_id: string;
-  delay_minutes: number;
-  profit_at_risk: number;
   reason: string;
 }
 

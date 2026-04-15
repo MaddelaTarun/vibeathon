@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { KitchenEngine } from './engine.js';
 import { AgentBrain } from './brain.ts';
-import { Order, OrderItem, StationType } from './types/index.js';
+import { Order, OrderItem } from './types/index.js';
 
 const engine = new KitchenEngine();
 const brain = new AgentBrain(engine);

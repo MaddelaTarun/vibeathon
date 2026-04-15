@@ -35,7 +35,7 @@ export class PlannerAgent {
   /**
    * Calculate optimal station assignment based on current load
    */
-  calculateStationLoad(ticket: Ticket, stations: Station[]): Map<StationType, number> {
+  calculateStationLoad(ticket: Ticket, _stations: Station[]): Map<StationType, number> {
     const loadMap = new Map<StationType, number>();
 
     ticket.items.forEach((item) => {

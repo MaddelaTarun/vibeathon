@@ -1,6 +1,7 @@
 /**
  * Expeditor Engine - The Autonomous Decision Engine
  * Implements the agentic approach from oh-my-claudecode
+ * Upgraded to: Realistic Professional Kitchen Logic with Skill-Based Reallocation
  */
 
 export class ExpeditorEngine {
@@ -18,6 +19,17 @@ export class ExpeditorEngine {
       auto_86_count: 0,
     };
     this.orderCounter = 1;
+    
+    // Skill Matrix configuration
+    this.skillRequirements = {
+      'grill': 'culinary_advanced',
+      'saute': 'culinary_advanced',
+      'pantry': 'culinary_basic',
+      'pastry': 'pastry_specialist',
+      'fryer': 'culinary_basic',
+      'pass': 'expeditor',
+      'dish': 'general'
+    };
   }
 
   initializeStations() {
@@ -28,7 +40,10 @@ export class ExpeditorEngine {
         stress_level: 45,
         capacity: 100,
         current_load: 45,
-        assigned_staff: ['Cook-G1', 'Cook-G2'],
+        assigned_staff: [
+          { name: 'Chef Marco', skills: ['culinary_advanced', 'culinary_basic', 'expeditor'] },
+          { name: 'Cook Andre', skills: ['culinary_advanced', 'culinary_basic'] }
+        ],
       },
       {
         id: 'saute',
@@ -36,23 +51,61 @@ export class ExpeditorEngine {
         stress_level: 60,
         capacity: 100,
         current_load: 60,
-        assigned_staff: ['Cook-S1', 'Cook-S2'],
+        assigned_staff: [
+          { name: 'Chef Elena', skills: ['culinary_advanced', 'culinary_basic'] },
+          { name: 'Cook Sarah', skills: ['culinary_advanced', 'culinary_basic'] }
+        ],
       },
       {
-        id: 'prep',
-        name: 'Prep',
+        id: 'pantry',
+        name: 'Pantry',
         stress_level: 30,
         capacity: 100,
         current_load: 30,
-        assigned_staff: ['Prep-1', 'Prep-2', 'Prep-3'],
+        assigned_staff: [
+          { name: 'Prep Leo', skills: ['culinary_basic', 'general'] },
+          { name: 'Prep Mia', skills: ['culinary_basic', 'general'] }
+        ],
+      },
+      {
+        id: 'fryer',
+        name: 'Fryer',
+        stress_level: 25,
+        capacity: 100,
+        current_load: 25,
+        assigned_staff: [
+          { name: 'Junior Sam', skills: ['culinary_basic', 'general'] }
+        ],
+      },
+      {
+        id: 'pastry',
+        name: 'Pastry',
+        stress_level: 20,
+        capacity: 80,
+        current_load: 16,
+        assigned_staff: [
+          { name: 'Pâtissier Luc', skills: ['pastry_specialist', 'culinary_basic'] }
+        ],
+      },
+      {
+        id: 'pass',
+        name: 'Pass',
+        stress_level: 10,
+        capacity: 200,
+        current_load: 20,
+        assigned_staff: [
+          { name: 'Maitre D’ David', skills: ['expeditor', 'general'] }
+        ],
       },
       {
         id: 'dish',
         name: 'Dish',
         stress_level: 50,
-        capacity: 100,
-        current_load: 50,
-        assigned_staff: ['Dish-1'],
+        capacity: 150,
+        current_load: 75,
+        assigned_staff: [
+          { name: 'Porter John', skills: ['general'] }
+        ],
       },
     ];
   }
@@ -82,47 +135,46 @@ export class ExpeditorEngine {
           id: `bottleneck-${station.id}-${Date.now()}`,
           timestamp: Date.now(),
           type: 'labor_reallocation',
-          severity: station.stress_level > 90 ? 'critical' : 'warning',
-          description: `${station.name} Station bottleneck at ${station.stress_level}%`,
+          severity: station.stress_level > 92 ? 'critical' : 'warning',
+          description: `${station.name} Station bottleneck at ${station.stress_level.toFixed(0)}%`,
           station: station.id,
-          impact: `Recommend labor reallocation`,
+          impact: `High stress detected. Checking for qualified cross-trained staff.`,
         });
 
-        // Execute labor reallocation
+        // Execute skill-based labor reallocation
         this.reallocateLabor(station);
       }
     });
 
     // Check for delayed tickets
     this.tickets.forEach((ticket) => {
-      if (ticket.status === 'in_progress' && ticket.delay_minutes > 10) {
+      if (ticket.status === 'in_progress' && ticket.delay_minutes > 12) {
         actions.push({
           id: `delay-${ticket.id}-${Date.now()}`,
           timestamp: Date.now(),
           type: 'margin_flag',
-          severity: ticket.delay_minutes > 15 ? 'critical' : 'warning',
+          severity: ticket.delay_minutes > 18 ? 'critical' : 'warning',
           description: `Ticket #${ticket.order_number} delayed ${ticket.delay_minutes} minutes`,
           ticket_id: ticket.id,
-          impact: `$${ticket.margin_value.toFixed(2)} profit at risk`,
+          impact: `$${ticket.margin_value.toFixed(2)} margin at risk. Expediting requested.`,
         });
       }
     });
 
-    // Check for overload
-    const overloadedStations = this.stations.filter((s) => s.stress_level > 90);
+    // Check for total system overload
+    const criticalStations = this.stations.filter((s) => s.stress_level > 90);
     const pendingTickets = this.tickets.filter((t) => t.status === 'pending');
 
-    if (overloadedStations.length > 0 && pendingTickets.length > 5) {
+    if (criticalStations.length >= 2 && pendingTickets.length > 8) {
       actions.push({
         id: `overload-${Date.now()}`,
         timestamp: Date.now(),
         type: 'task_downgrade',
         severity: 'critical',
-        description: `System overload: ${overloadedStations.length} stations critical`,
-        impact: 'Downgrading low-margin tasks',
+        description: `Critical overload across ${criticalStations.length} stations`,
+        impact: 'Implementing autonomous Auto-86 for low-margin orders.',
       });
 
-      // Downgrade low-margin tasks
       this.downgradeTasks();
     }
 
@@ -131,26 +183,30 @@ export class ExpeditorEngine {
   }
 
   /**
-   * Architect Agent - Labor reallocation
+   * Architect Agent - Skill-based Labor reallocation
    */
   reallocateLabor(criticalStation) {
-    // Find underutilized station
-    const underutilized = this.stations.find(
-      (s) => s.stress_level < 50 && s.assigned_staff.length > 1 && s.id !== criticalStation.id
-    );
+    const requiredSkill = this.skillRequirements[criticalStation.id];
 
-    if (underutilized) {
-      const staffMember = underutilized.assigned_staff.pop();
+    // Find a qualified staff member at an underutilized station (< 60% stress)
+    const donorStation = this.stations.find((s) => {
+      if (s.id === criticalStation.id || s.stress_level > 60 || s.assigned_staff.length <= 1) return false;
+      return s.assigned_staff.some(staff => staff.skills.includes(requiredSkill));
+    });
+
+    if (donorStation) {
+      const staffIndex = donorStation.assigned_staff.findIndex(staff => staff.skills.includes(requiredSkill));
+      const staffMember = donorStation.assigned_staff.splice(staffIndex, 1)[0];
       criticalStation.assigned_staff.push(staffMember);
 
-      // Adjust stress levels
-      criticalStation.stress_level = Math.max(0, criticalStation.stress_level - 15);
-      underutilized.stress_level = Math.min(100, underutilized.stress_level + 5);
+      // Systemic impact of reallocation
+      criticalStation.stress_level = Math.max(0, criticalStation.stress_level - 20);
+      donorStation.stress_level = Math.min(100, donorStation.stress_level + 10);
 
       this.metrics.labor_reallocations++;
 
       console.log(
-        `🔄 Labor reallocation: ${staffMember} from ${underutilized.name} to ${criticalStation.name}`
+        `🔄 Labor Reallocation: ${staffMember.name} (qualified for ${criticalStation.name}) moved from ${donorStation.name} to mitigate bottleneck.`
       );
     }
   }
@@ -160,14 +216,14 @@ export class ExpeditorEngine {
    */
   downgradeTasks() {
     const lowMarginTickets = this.tickets
-      .filter((t) => t.status === 'pending' && t.margin_value < 15)
+      .filter((t) => t.status === 'pending' && t.margin_value < 12)
       .sort((a, b) => a.margin_value - b.margin_value);
 
     if (lowMarginTickets.length > 0) {
       const ticket = lowMarginTickets[0];
       ticket.status = 'cancelled';
       this.metrics.auto_86_count++;
-      console.log(`🚫 Auto-86: Ticket #${ticket.order_number} (low margin: $${ticket.margin_value})`);
+      console.log(`🚫 Auto-86 (Margin Protection): Cancelled Order #${ticket.order_number} (Margin: $${ticket.margin_value.toFixed(2)}) due to station saturation.`);
     }
   }
 
@@ -175,9 +231,8 @@ export class ExpeditorEngine {
    * Apply autonomous action
    */
   applyAction(action) {
-    // Actions are already applied in analyze()
-    // This is for logging and tracking
     this.actions.push(action);
+    if (this.actions.length > 50) this.actions.shift(); // Keep log manageable
   }
 
   /**
@@ -186,67 +241,50 @@ export class ExpeditorEngine {
   updateTickets() {
     this.tickets.forEach((ticket) => {
       if (ticket.status === 'pending') {
-        // Start ticket if capacity available
         const canStart = this.stations.every((station) => {
           const stationItems = ticket.items.filter((item) => item.station === station.name);
-          return stationItems.length === 0 || station.stress_level < 95;
+          return stationItems.length === 0 || station.stress_level < 98;
         });
 
         if (canStart) {
           ticket.status = 'in_progress';
           ticket.started_at = Date.now();
 
-          // Update station loads
           ticket.items.forEach((item) => {
             const station = this.stations.find((s) => s.name === item.station);
             if (station) {
               station.current_load += item.prep_time_minutes;
-              station.stress_level = Math.min(
-                100,
-                (station.current_load / station.capacity) * 100
-              );
+              station.stress_level = Math.min(100, (station.current_load / station.capacity) * 100);
             }
           });
         }
       } else if (ticket.status === 'in_progress') {
-        // Update delay
-        const elapsedMinutes = (Date.now() - ticket.started_at) / 60000; // actual minutes
+        const elapsedMinutes = (Date.now() - ticket.started_at) / 60000;
         ticket.delay_minutes = Math.floor(elapsedMinutes);
 
-        // Calculate total prep time in seconds for the simulation
-        // Scale: 1 minute of real prep = 3 seconds of simulation time
         const totalPrepMinutes = ticket.items.reduce((sum, item) => sum + item.prep_time_minutes, 0);
-        const requiredSimulationSeconds = totalPrepMinutes * 3;
+        const requiredSimulationSeconds = totalPrepMinutes * 2.5; // Slightly faster simulation
         const elapsedSimulationSeconds = (Date.now() - ticket.started_at) / 1000;
 
-        // Complete ticket if enough simulation time has passed
         if (elapsedSimulationSeconds >= requiredSimulationSeconds) {
           ticket.status = 'completed';
           ticket.completed_at = Date.now();
           this.metrics.completed_tickets++;
 
-          // Release station capacity
           ticket.items.forEach((item) => {
             const station = this.stations.find((s) => s.name === item.station);
             if (station) {
               station.current_load = Math.max(0, station.current_load - item.prep_time_minutes);
-              station.stress_level = Math.min(
-                100,
-                (station.current_load / station.capacity) * 100
-              );
+              station.stress_level = Math.min(100, (station.current_load / station.capacity) * 100);
             }
           });
         }
       }
     });
 
-    // Update metrics
     this.updateMetrics();
   }
 
-  /**
-   * Update system metrics
-   */
   updateMetrics() {
     const activeTickets = this.tickets.filter(
       (t) => t.status !== 'completed' && t.status !== 'cancelled'
@@ -265,27 +303,30 @@ export class ExpeditorEngine {
   }
 
   /**
-   * Add a random ticket (for simulation)
+   * Add a random ticket (Professional Menu)
    */
   addRandomTicket() {
     const menuItems = [
-      { name: 'Steak', station: 'Grill', prep_time_minutes: 12, ingredient_cost: 15, sale_price: 45 },
-      { name: 'Salmon', station: 'Grill', prep_time_minutes: 10, ingredient_cost: 12, sale_price: 38 },
-      { name: 'Pasta', station: 'Sauté', prep_time_minutes: 8, ingredient_cost: 5, sale_price: 22 },
-      { name: 'Risotto', station: 'Sauté', prep_time_minutes: 15, ingredient_cost: 6, sale_price: 26 },
-      { name: 'Salad', station: 'Prep', prep_time_minutes: 3, ingredient_cost: 3, sale_price: 12 },
-      { name: 'Soup', station: 'Prep', prep_time_minutes: 5, ingredient_cost: 2, sale_price: 10 },
+      { name: 'Dry-Aged Ribeye', station: 'Grill', prep_time_minutes: 18, ingredient_cost: 22, sale_price: 65 },
+      { name: 'Wagyu Burger', station: 'Grill', prep_time_minutes: 12, ingredient_cost: 14, sale_price: 32 },
+      { name: 'Pan-Seared Scallops', station: 'Sauté', prep_time_minutes: 10, ingredient_cost: 16, sale_price: 48 },
+      { name: 'Wild Mushroom Risotto', station: 'Sauté', prep_time_minutes: 20, ingredient_cost: 8, sale_price: 28 },
+      { name: 'Beef Tartare', station: 'Pantry', prep_time_minutes: 8, ingredient_cost: 12, sale_price: 24 },
+      { name: 'Burrata & Heirloom Tomato', station: 'Pantry', prep_time_minutes: 6, ingredient_cost: 7, sale_price: 19 },
+      { name: 'Crispy Calamari', station: 'Fryer', prep_time_minutes: 7, ingredient_cost: 6, sale_price: 21 },
+      { name: 'Truffle Fries', station: 'Fryer', prep_time_minutes: 5, ingredient_cost: 4, sale_price: 14 },
+      { name: 'Crème Brûlée', station: 'Pastry', prep_time_minutes: 5, ingredient_cost: 3, sale_price: 15 },
+      { name: 'Chocolate Fondant', station: 'Pastry', prep_time_minutes: 15, ingredient_cost: 4, sale_price: 16 },
     ];
 
-    // Random 1-3 items
-    const itemCount = Math.floor(Math.random() * 3) + 1;
+    const itemCount = Math.floor(Math.random() * 4) + 1;
     const items = [];
     for (let i = 0; i < itemCount; i++) {
       items.push(menuItems[Math.floor(Math.random() * menuItems.length)]);
     }
 
     const margin_value = items.reduce((sum, item) => sum + (item.sale_price - item.ingredient_cost), 0);
-    const complexity = Math.min(10, Math.ceil(items.length + items.reduce((sum, item) => sum + item.prep_time_minutes, 0) / 10));
+    const complexity = Math.min(10, Math.ceil(items.length * 1.5 + items.reduce((sum, item) => sum + item.prep_time_minutes, 0) / 12));
 
     const ticket = {
       id: `ticket-${this.orderCounter}-${Date.now()}`,

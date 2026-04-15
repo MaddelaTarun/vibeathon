@@ -1,4 +1,4 @@
-import { KitchenState, StationType, Order, Station, Decision } from './types/index.js';
+import { KitchenState, StationType, Order, Decision, OrderItem } from './types/index.js';
 
 export class KitchenEngine {
   private state: KitchenState;
@@ -25,7 +25,7 @@ export class KitchenEngine {
 
   addOrder(order: Order) {
     this.state.activeOrders.push(order);
-    order.items.forEach(item => {
+    order.items.forEach((item: OrderItem) => {
       this.state.stations[item.station].currentLoad += 1;
     });
     this.calculateProfitAtRisk();
@@ -62,13 +62,13 @@ export class KitchenEngine {
   private calculateProfitAtRisk() {
     let risk = 0;
     Object.values(this.state.stations).forEach(station => {
-      const stress = this.getStationStress(station.type);
+      const stress = this.getStationStress(station.type as StationType);
       if (stress > 0.8) {
         // Find orders using this station
         const stationOrders = this.state.activeOrders.filter(o => 
           o.items.some(i => i.station === station.type)
         );
-        risk += stationOrders.reduce((sum, o) => sum + o.items.reduce((iSum, i) => iSum + i.profit, 0), 0);
+        risk += stationOrders.reduce((sum: number, o: Order) => sum + o.items.reduce((iSum: number, i: OrderItem) => iSum + i.profit, 0), 0);
       }
     });
     this.state.profitAtRisk = risk;
@@ -91,9 +91,9 @@ export class KitchenEngine {
 
     // Update orders: if all items done, remove order and add profit
     this.state.activeOrders = this.state.activeOrders.filter(order => {
-      const isDone = order.items.every(item => this.state.stations[item.station].currentLoad < 0.1);
+      const isDone = order.items.every((item: OrderItem) => this.state.stations[item.station].currentLoad < 0.1);
       if (isDone) {
-        this.state.totalProfit += order.items.reduce((sum, i) => sum + i.profit, 0);
+        this.state.totalProfit += order.items.reduce((sum: number, i: OrderItem) => sum + i.profit, 0);
         return false;
       }
       return true;

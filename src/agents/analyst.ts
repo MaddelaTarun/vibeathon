@@ -16,7 +16,7 @@ export class AnalystAgent {
   analyze(
     stations: Station[],
     tickets: Ticket[],
-    telemetry: Telemetry
+    _telemetry: Telemetry
   ): AutonomousAction[] {
     const actions: AutonomousAction[] = [];
 

@@ -7,30 +7,36 @@ export default {
   theme: {
     extend: {
       colors: {
-        'bistro': {
-          bg: '#faf9f6', // Warm paper/cream
-          surface: '#ffffff',
-          card: '#ffffff',
-          border: '#e2e8f0',
-          text: '#1e293b',
-          muted: '#64748b',
-          accent: '#0f172a',
+        'grilli': {
+          black: '#0a0a0b',
+          dark: '#121214',
+          surface: '#1a1a1c',
+          card: '#222225',
+          gold: '#c5a373',
+          gold_muted: '#8e795c',
+          text: '#e1e1e1',
+          muted: '#9ca3af',
+          border: '#2a2a2e',
         },
         'status': {
-          critical: '#ef4444', // Rose
-          warning: '#f59e0b', // Amber
-          optimal: '#10b981', // Emerald
-          info: '#3b82f6', // Blue
+          critical: '#ff4d4d',
+          warning: '#ffb347',
+          optimal: '#2ecc71',
+          info: '#3498db',
         },
       },
       fontFamily: {
-        'serif': ['Playfair Display', 'serif'],
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'serif': ['"Instrument Serif"', 'serif'],
+        'sans': ['"Inter"', 'system-ui', 'sans-serif'],
+        'mono': ['"JetBrains Mono"', 'monospace'],
       },
       boxShadow: {
-        'soft': '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
-        'elevated': '0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07)',
+        'premium': '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
+        'glow': '0 0 15px rgba(197, 163, 115, 0.15)',
       },
+      backgroundImage: {
+        'gold-gradient': 'linear-gradient(to right, #c5a373, #e8d2b5)',
+      }
     },
   },
   plugins: [],

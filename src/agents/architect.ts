@@ -14,7 +14,7 @@ export class ArchitectAgent {
    */
   recommendReallocations(
     stations: Station[],
-    tickets: Ticket[]
+    _tickets: Ticket[]
   ): LaborReallocation[] {
     const reallocations: LaborReallocation[] = [];
 
@@ -37,7 +37,7 @@ export class ArchitectAgent {
           reallocations.push({
             id: `realloc-${Date.now()}-${Math.random()}`,
             timestamp: Date.now(),
-            staff_member: staffMember,
+            staff_member: staffMember.name,
             from_station: underutilized.name,
             to_station: critical.name,
             duration_minutes: this.REALLOCATION_DURATION,

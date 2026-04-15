@@ -3,9 +3,9 @@ import { Station, Ticket, AutonomousAction, SystemMetrics, Telemetry } from './m
 import StationMonitor from './components/StationMonitor';
 import MarginTracker from './components/MarginTracker';
 import ActionsLog from './components/ActionsLog';
-import LaborBoard from './components/LaborBoard';
 import MetricsDashboard from './components/MetricsDashboard';
 import Header from './components/Header';
+import OnboardingTour from './components/OnboardingTour';
 
 function App() {
   const [stations, setStations] = useState<Station[]>([]);
@@ -22,6 +22,7 @@ function App() {
   });
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
   const [connected, setConnected] = useState(false);
+  const [showTour, setShowTour] = useState(true);
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:3001/ws');
@@ -72,65 +73,97 @@ function App() {
     .reduce((sum, t) => sum + t.margin_value, 0);
 
   return (
-    <div className="min-h-screen bg-bistro-bg text-bistro-text font-sans antialiased selection:bg-bistro-accent selection:text-white pb-24">
+    <div className="min-h-screen bg-grilli-black text-grilli-text font-sans antialiased selection:bg-grilli-gold selection:text-black pb-24 relative overflow-x-hidden">
+      {showTour && <OnboardingTour onClose={() => setShowTour(false)} />}
+      
+      {/* Dynamic Background Effects */}
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-grilli-gold/5 blur-[120px] rounded-full animate-pulse"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-grilli-gold/5 blur-[120px] rounded-full animate-pulse delay-700"></div>
+      </div>
+
       <Header connected={connected} />
 
-      <main className="max-w-4xl mx-auto px-6 pt-16 space-y-24">
-        {/* Heartbeat Status */}
-        <section className="text-center space-y-4">
-          <span className="text-[10px] font-bold text-bistro-muted uppercase tracking-[0.3em]">Kitchen Heartbeat</span>
-          <h2 className="text-5xl font-serif font-bold text-bistro-text italic leading-tight">
-            {totalAtRisk > 200 
-              ? "Service is struggling, but the AI is intervening." 
-              : totalAtRisk > 50 
-                ? "The rush is building. We are tracking two delays." 
-                : "The kitchen is in perfect harmony."}
-          </h2>
-        </section>
-
-        {/* Vital Metrics */}
-        <MetricsDashboard metrics={metrics} telemetry={telemetry} />
-
-        {/* Section: Station Status */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between border-b border-bistro-border pb-4">
-            <h3 className="text-lg font-serif font-bold italic">Station Performance</h3>
-            <span className="text-[10px] font-bold text-bistro-muted uppercase tracking-widest">Real-time Telemetry</span>
+      <main className="max-w-6xl mx-auto px-8 pt-16 space-y-32 relative z-10">
+        {/* Hero Section */}
+        <section className="text-center space-y-6 pt-12 animate-fade-in">
+          <div className="inline-block px-4 py-1.5 border border-grilli-gold/20 bg-grilli-surface/50 rounded-full">
+            <span className="text-[10px] font-bold text-grilli-gold uppercase tracking-[0.4em]">Autonomous Command Center</span>
           </div>
-          <StationMonitor stations={stations} />
+          <h2 className="text-6xl md:text-7xl font-serif font-bold text-grilli-text leading-[1.1]">
+            {totalAtRisk > 250 
+              ? <span className="text-status-critical italic">Critical Margin Failure Detected.</span>
+              : totalAtRisk > 100 
+                ? <span className="text-status-warning italic">High Stress. Orchestrating Reallocation.</span>
+                : <span className="text-grilli-gold italic">Service Operating at Peak Efficiency.</span>}
+          </h2>
+          <p className="text-grilli-muted max-w-2xl mx-auto text-sm leading-relaxed font-medium">
+            Kitchen-Pulse analyzes sub-second telemetry to mitigate labor bottlenecks and protect real-time profit margins.
+          </p>
         </section>
 
-        {/* Section: Live Operations (Merging Risk and AI) */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-16">
-          <div className="md:col-span-2 space-y-8">
-            <div className="space-y-2">
-              <h3 className="text-xl font-serif font-bold text-status-critical italic">Critical Delays</h3>
-              <p className="text-xs text-bistro-muted font-medium">Profit currently at risk due to wait times.</p>
+        {/* Core Operational Layer */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Left: Station Grid */}
+          <div className="lg:col-span-8 space-y-8">
+            <div className="flex items-center justify-between border-b border-grilli-border pb-6">
+              <div className="space-y-1">
+                <h3 className="text-2xl font-serif font-bold text-grilli-gold italic tracking-tight">Station Capacity Monitor</h3>
+                <p className="text-xs text-grilli-muted font-medium uppercase tracking-widest opacity-60">Real-time Station Telemetry</p>
+              </div>
+              <div className="flex items-center space-x-3">
+                 <div className="w-2 h-2 rounded-full bg-status-optimal animate-pulse"></div>
+                 <span className="text-[10px] font-bold text-grilli-muted uppercase">Engine Online</span>
+              </div>
+            </div>
+            <StationMonitor stations={stations} />
+          </div>
+
+          {/* Right: Primary Metrics Dashboard */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="space-y-6">
+              <div className="border-b border-grilli-border pb-6">
+                <h3 className="text-2xl font-serif font-bold text-grilli-gold italic tracking-tight">Vitals</h3>
+                <p className="text-xs text-grilli-muted font-medium uppercase tracking-widest opacity-60">Strategic Performance Indices</p>
+              </div>
+              <MetricsDashboard metrics={metrics} telemetry={telemetry} />
+            </div>
+          </div>
+        </div>
+
+        {/* Live Operations & AI Logic */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 border-t border-grilli-border/50 pt-24">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="space-y-3">
+              <h3 className="text-3xl font-serif font-bold text-grilli-text italic">Margin Leakage</h3>
+              <p className="text-sm text-grilli-muted font-medium leading-relaxed">Orders currently delayed beyond target thresholds, impacting the bottom line.</p>
             </div>
             <MarginTracker tickets={tickets} />
           </div>
 
-          <div className="md:col-span-3 space-y-8">
-            <div className="space-y-2">
-              <h3 className="text-xl font-serif font-bold text-bistro-text italic">AI Intelligence Feed</h3>
-              <p className="text-xs text-bistro-muted font-medium">Automatic adjustments made by the Orchestrator.</p>
+          <div className="lg:col-span-3 space-y-8 bg-grilli-surface/30 p-10 rounded-xl border border-grilli-border/30">
+            <div className="space-y-3">
+               <div className="flex items-center justify-between">
+                <h3 className="text-3xl font-serif font-bold text-grilli-text italic">Intelligence Feed</h3>
+                <button className="text-[10px] text-grilli-gold font-bold uppercase tracking-widest border border-grilli-gold/30 px-3 py-1 rounded hover:bg-grilli-gold/10 transition-colors">Clear Log</button>
+               </div>
+              <p className="text-sm text-grilli-muted font-medium leading-relaxed">Autonomous interventions executed by the Expeditor Engine.</p>
             </div>
             <ActionsLog actions={actions} />
           </div>
         </div>
 
-        {/* Section: Team */}
-        <section className="pt-12 border-t border-bistro-border space-y-4">
-          <div className="flex items-center space-x-4">
-            <span className="text-[10px] font-bold text-bistro-muted uppercase tracking-widest">Professional Staff</span>
-            <div className="flex-grow border-b border-bistro-border opacity-20"></div>
-          </div>
-          <LaborBoard stations={stations} />
-        </section>
+        <button 
+          onClick={() => setShowTour(true)}
+          className="fixed bottom-8 right-8 w-12 h-12 rounded-full bg-grilli-gold flex items-center justify-center text-grilli-black shadow-premium hover:scale-110 transition-transform z-40"
+          title="System Help"
+        >
+          <span className="text-xl font-bold font-serif italic">?</span>
+        </button>
       </main>
 
-      <footer className="max-w-4xl mx-auto px-6 pt-24 text-center opacity-40">
-        <span className="text-[9px] font-bold uppercase tracking-[0.4em] text-bistro-muted">Smart Kitchen Assistant — Version 2.0 Minimalist</span>
+      <footer className="max-w-6xl mx-auto px-8 py-24 text-center border-t border-grilli-border/30 mt-32">
+        <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-grilli-muted opacity-40">Kitchen-Pulse Autonomous Engine — Built for Precision Operations</span>
       </footer>
     </div>
   );
