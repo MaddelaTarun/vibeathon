@@ -47,6 +47,7 @@ export interface Telemetry {
   active_tickets: number;
   labor_utilization: number;
   throughput_per_hour: number;
+  ai_briefing?: string;
 }
 
 export interface AutonomousAction {

@@ -100,6 +100,24 @@ function App() {
           <p className="text-grilli-muted max-w-2xl mx-auto text-sm leading-relaxed font-medium">
             Kitchen-Pulse analyzes sub-second telemetry to mitigate labor bottlenecks and protect real-time profit margins.
           </p>
+
+          {/* AI Situation Briefing */}
+          <div className="mt-12 p-8 bg-grilli-surface/50 border border-grilli-gold/20 rounded-xl max-w-4xl mx-auto relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-3">
+              <span className="text-[8px] font-bold text-grilli-gold uppercase tracking-[0.4em] animate-pulse">Live AI Intelligence</span>
+            </div>
+            <div className="flex items-start space-x-6">
+              <div className="w-12 h-12 rounded-full border border-grilli-gold/30 flex items-center justify-center flex-shrink-0 bg-grilli-black">
+                <span className="text-2xl font-serif italic text-grilli-gold">C</span>
+              </div>
+              <div className="space-y-3 text-left">
+                <h4 className="text-xs font-bold text-grilli-gold uppercase tracking-widest opacity-60">Head Chef's Situation Briefing</h4>
+                <p className="text-lg font-serif italic text-grilli-text leading-relaxed">
+                  "{telemetry?.ai_briefing || 'Analyzing operational data for strategic insights...'}"
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Core Operational Layer */}
